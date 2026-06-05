@@ -45,10 +45,10 @@ func main() {
 		case "version":
 			fmt.Printf("ac-term %s\n", version)
 			return
-		case "export", "--export":
+		case "export":
 			doExport()
 			return
-		case "import", "--import":
+		case "import":
 			doImport(os.Args[2:])
 			return
 		}

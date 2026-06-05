@@ -100,10 +100,10 @@ Backups use the same base64 string format as connections.audio's
 **Settings → Copy backup / Import**, so they round-trip both ways:
 
 ```sh
-ac-term --export                 # prints a backup string to stdout
-ac-term --import "<string>"      # merge a backup into your progress
-pbpaste | ac-term --import       # …or pipe it in (reads stdin if no arg)
-ac-term --import --replace "<string>"   # wipe local progress first
+ac-term export                  # prints a backup string to stdout
+ac-term import "<string>"       # merge a backup into your progress
+pbpaste | ac-term import        # …or pipe it in (reads stdin if no arg)
+ac-term import --replace "<string>"   # wipe local progress first
 ```
 
 Only finished days (won/lost) travel in a backup — the same terminal-only scope
