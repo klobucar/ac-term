@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -34,33 +35,34 @@ func (s *progSender) Send(msg tea.Msg) {
 var version = "dev"
 
 func main() {
+	// Verb subcommands handle their own args (and stdin), so dispatch them
+	// before flag parsing — same pattern as `go build` / `go test`.
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
-		case "-v", "--version", "version":
+		case "help":
+			usage(os.Stdout)
+			return
+		case "version":
 			fmt.Printf("ac-term %s\n", version)
 			return
-		case "-h", "--help", "help":
-			fmt.Println("ac-term — terminal Audio Connections\n\n" +
-				"Usage: ac-term\n" +
-				"       ac-term --export\n" +
-				"       ac-term --import [string]   (reads stdin if omitted; --replace to wipe first)\n\n" +
-				"Flags:\n" +
-				"      --export     print a backup string (interchangeable with connections.audio)\n" +
-				"      --import     import a backup string into your saved progress\n\n" +
-				"Env:\n  AC_PUZZLES_URL   override the puzzle catalogue source")
-			return
-		case "--export", "export":
+		case "export", "--export":
 			doExport()
 			return
-		case "--import", "import":
+		case "import", "--import":
 			doImport(os.Args[2:])
 			return
 		}
 	}
 
+	f := parseFlags(os.Args[1:]) // handles -h/--help, -v/--version, hidden -a/-b
+	if f.version {
+		fmt.Printf("ac-term %s\n", version)
+		return
+	}
+
 	now := time.Now()
-	unlocked := unlockAll()
-	withBacklog := backlogEnabled()
+	unlocked := f.all || envSet("AC_UNLOCK_ALL")
+	withBacklog := f.backlog || envSet("AC_BACKLOG")
 
 	// Start from the freshest catalogue we already have on disk; fall back to
 	// the embedded snapshot. The network refresh happens in the background so
@@ -160,16 +162,11 @@ func doExport() {
 // doImport reads a transfer string (from args or stdin) and merges its days
 // into saved progress. `--replace` wipes existing progress first.
 func doImport(args []string) {
-	replace := false
-	var str string
-	for _, a := range args {
-		switch {
-		case a == "--replace":
-			replace = true
-		case str == "":
-			str = a
-		}
-	}
+	fs := flag.NewFlagSet("import", flag.ExitOnError)
+	replace := fs.Bool("replace", false, "wipe existing progress before importing")
+	_ = fs.Parse(args)
+
+	str := strings.TrimSpace(strings.Join(fs.Args(), " "))
 	if str == "" { // no inline string — read it from stdin
 		raw, _ := io.ReadAll(os.Stdin)
 		str = strings.TrimSpace(string(raw))
@@ -191,7 +188,7 @@ func doImport(args []string) {
 		byDay[p.Day] = p
 	}
 
-	if replace {
+	if *replace {
 		_ = save.Clear()
 	}
 	imported, skipped := 0, 0
@@ -211,44 +208,52 @@ func doImport(args []string) {
 	if skipped > 0 {
 		msg += fmt.Sprintf(", skipped %d unknown", skipped)
 	}
-	if replace {
+	if *replace {
 		msg = "replaced progress — " + msg
 	}
 	fmt.Println(msg)
 }
 
-// hasArg reports whether any of the given flags appears in os.Args.
-func hasArg(flags ...string) bool {
-	for _, a := range os.Args[1:] {
-		for _, f := range flags {
-			if a == f {
-				return true
-			}
-		}
-	}
-	return false
+// cliFlags are the top-level boolean flags.
+type cliFlags struct{ version, all, backlog bool }
+
+// parseFlags parses the non-verb flags. --all/-a and --backlog/-b are
+// deliberately HIDDEN: registered so they work, but omitted from usage() (they
+// reveal unreleased/unscheduled answers). AC_UNLOCK_ALL / AC_BACKLOG mirror them.
+func parseFlags(args []string) cliFlags {
+	var f cliFlags
+	fs := flag.NewFlagSet("ac-term", flag.ExitOnError)
+	fs.SetOutput(os.Stderr)
+	fs.Usage = func() { usage(os.Stderr) }
+	fs.BoolVar(&f.version, "version", false, "print version and exit")
+	fs.BoolVar(&f.version, "v", false, "print version and exit")
+	fs.BoolVar(&f.all, "all", false, "")
+	fs.BoolVar(&f.all, "a", false, "")
+	fs.BoolVar(&f.backlog, "backlog", false, "")
+	fs.BoolVar(&f.backlog, "b", false, "")
+	_ = fs.Parse(args) // ExitOnError handles bad flags / -h
+	return f
 }
 
-// --all/-a and --backlog/-b are deliberately HIDDEN flags: they work but are
-// kept out of --help and the README (they reveal unreleased/unscheduled
-// answers). Don't add them back to the help text.
+// usage prints the public help. Hidden flags are intentionally absent.
+func usage(w io.Writer) {
+	fmt.Fprint(w, `ac-term — terminal Audio Connections
 
-// unlockAll reports whether every day (including not-yet-released ones) should
-// be playable — via `--all`/`-a` or AC_UNLOCK_ALL=1.
-func unlockAll() bool {
-	if v := os.Getenv("AC_UNLOCK_ALL"); v != "" && v != "0" {
-		return true
-	}
-	return hasArg("--all", "-a")
+Usage:
+  ac-term                play
+  ac-term version        print version
+  ac-term export         print a backup string (interchangeable with connections.audio)
+  ac-term import [str]   import a backup (reads stdin if omitted; --replace wipes first)
+
+Env:
+  AC_PUZZLES_URL         override the puzzle catalogue source
+`)
 }
 
-// backlogEnabled reports whether unscheduled backlog puzzles should be playable
-// — via `--backlog` or AC_BACKLOG=1.
-func backlogEnabled() bool {
-	if v := os.Getenv("AC_BACKLOG"); v != "" && v != "0" {
-		return true
-	}
-	return hasArg("--backlog", "-b")
+// envSet reports whether an env var is set to a non-empty, non-"0" value.
+func envSet(name string) bool {
+	v := os.Getenv(name)
+	return v != "" && v != "0"
 }
 
 // releasedOr returns the full catalogue when unlocked, else only released days.
