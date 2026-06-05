@@ -1,0 +1,37 @@
+# ── Binaries ────────────────────────────────────────────────────────────────
+/ac-term
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# ── Go tooling output ───────────────────────────────────────────────────────
+*.out
+*.prof
+coverage.*
+go.work
+go.work.sum
+/dist/            # GoReleaser
+
+# ── Embedded puzzle data ────────────────────────────────────────────────────
+# Fetched via `make data`, never committed. A bare `go build` compiles with an
+# empty embed and fetches the feed at runtime instead. The feed/ dir itself
+# stays tracked (via .gitkeep) so the directory embed always resolves.
+/internal/data/feed/puzzle.json
+
+# ── Local caches / runtime ──────────────────────────────────────────────────
+*.log
+
+# ── OS / editor cruft ───────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace

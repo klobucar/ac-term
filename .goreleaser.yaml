@@ -1,0 +1,54 @@
+# GoReleaser config — cross-builds the TUI and publishes a GitHub Release on tag.
+# Validate locally with:  goreleaser check  (and  goreleaser release --snapshot --clean)
+version: 2
+
+project_name: ac-term
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: ac-term
+    main: . # only the root binary; cmd/snapshot & cmd/fetchcheck are dev tools
+    binary: ac-term
+    env:
+      - CGO_ENABLED=0 # static binaries, no libc dependency
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}" # reproducible builds
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "Merge pull request"
+
+release:
+  draft: false
+  prerelease: auto # tags like v1.2.3-rc1 publish as pre-releases

@@ -1,0 +1,36 @@
+name: release
+
+# Releases are DISABLED for now: this runs only when triggered by hand from the
+# Actions tab (workflow_dispatch), never automatically. To re-enable tag-driven
+# releases later, restore the `push: tags: ["v*"]` trigger below.
+on:
+  workflow_dispatch: {}
+# on:
+#   push:
+#     tags:
+#       - "v*"
+
+permissions:
+  contents: write # needed to create the GitHub Release
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0 # full history so the changelog can diff against the last tag
+          persist-credentials: false
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
