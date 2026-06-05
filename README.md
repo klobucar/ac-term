@@ -7,14 +7,15 @@ A terminal build of [Audio Connections](https://connections.audio) — the daily
 [Bubbletea](https://github.com/charmbracelet/bubbletea) and a cassette-deck
 color scheme. Same game, with a pop of color and the tape-reel vibe.
 
-The twist of the terminal version: **tapes deal in already peeled.** You don't
-see the song titles — you cue a tape, *listen*, and group by ear. Peek a name
-back on if you're stuck, and scribble your own label on any tape.
+Like the web game, you don't see the song titles — you cue a track, *listen*,
+and group the sixteen by ear. The terminal version just wears it as a cassette
+deck: tapes deal in with their labels peeled off, you peek one back on if you're
+stuck, and scribble your own label on any tape.
 
 ## Install
 
 ```sh
-go install github.com/klobucar/ac-term@latest   # needs Go 1.26+
+go install github.com/klobucar/ac-term@latest   # needs Go 1.25+
 ```
 
 Or build from a clone:
