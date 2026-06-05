@@ -1,5 +1,7 @@
 # ac-term
 
+![Audio Connections — a 4×4 grid of colorful cassette tapes in a retro terminal tape deck](assets/ac-term.png)
+
 A terminal build of [Audio Connections](https://connections.audio) — the daily
 "group sixteen songs into four hidden groups of four" puzzle — rendered with
 [Bubbletea](https://github.com/charmbracelet/bubbletea) and a cassette-deck
