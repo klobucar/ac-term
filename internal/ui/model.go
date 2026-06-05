@@ -16,7 +16,7 @@ import (
 	"github.com/klobucar/ac-term/internal/data"
 	"github.com/klobucar/ac-term/internal/save"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 // tickRate drives marquee scrolling, reel shimmer and VU animation.
@@ -133,7 +133,7 @@ func defaultPick(puzzles []data.Puzzle) int {
 			return i
 		}
 	}
-	return len(puzzles) - 1
+	return max(0, len(puzzles)-1)
 }
 
 func (m Model) Init() tea.Cmd { return tick() }
@@ -144,6 +144,10 @@ func (m Model) Frame() Model { m.frame++; return m }
 
 // DebugPlay forces a track into the "now playing" state. Dev-snapshots only.
 func (m Model) DebugPlay(trackID int) Model { m.playingID = trackID; return m }
+
+// Content returns the rendered screen string (what View wraps in a tea.View).
+// Exposed for dev snapshots that print frames without a running program.
+func (m Model) Content() string { return m.screenContent() }
 
 // ── game setup ────────────────────────────────────────────────────────────
 
@@ -308,7 +312,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.status = "⚠ preview unavailable for that track"
 		return m, nil
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if m.screen == screenPicker {
 			return m.updatePicker(msg)
 		}
@@ -317,7 +321,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) updatePicker(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m Model) updatePicker(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
@@ -333,19 +337,19 @@ func (m Model) updatePicker(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.pickerCur = 0
 	case "end", "G":
 		m.pickerCur = len(m.puzzles) - 1
-	case "enter", " ":
+	case "enter", "space":
 		m.startGame(m.puzzles[m.pickerCur])
 	}
 	return m, nil
 }
 
-func (m Model) updateGame(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m Model) updateGame(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// The DJ-note card captures input until confirmed away.
 	if m.noteOpen {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
-		case "enter", " ", "esc":
+		case "enter", "space", "esc":
 			m.noteOpen = false
 		}
 		return m, nil
@@ -385,7 +389,7 @@ func (m Model) updateGame(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if m.gameOver {
 		// On the end card: back to picker, or erase to replay.
 		switch msg.String() {
-		case "enter", " ":
+		case "enter", "space":
 			if m.canPlay {
 				m.player.Stop()
 			}
@@ -413,7 +417,7 @@ func (m Model) updateGame(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.cursor+4 < len(m.order) {
 			m.cursor += 4
 		}
-	case " ":
+	case "space":
 		return m.toggleCue(), nil
 	case "p", "enter":
 		return m.togglePlay()
@@ -499,13 +503,13 @@ func (m Model) beginEdit() Model {
 	return m
 }
 
-func (m Model) updateEditing(msg tea.KeyMsg) Model {
+func (m Model) updateEditing(msg tea.KeyPressMsg) Model {
 	id := m.currentID()
 	if id < 0 {
 		m.editing = false
 		return m
 	}
-	switch msg.Type {
+	switch msg.Code {
 	case tea.KeyEnter:
 		m.editing = false
 		m.status = "Label written ✎"
@@ -517,11 +521,10 @@ func (m Model) updateEditing(msg tea.KeyMsg) Model {
 		if len(r) > 0 {
 			m.notes[id] = string(r[:len(r)-1])
 		}
-	case tea.KeySpace:
-		m.notes[id] += " "
-	case tea.KeyRunes:
-		if len([]rune(m.notes[id])) < 28 {
-			m.notes[id] += string(msg.Runes)
+	default:
+		// Any printable key (incl. space) appends its text.
+		if msg.Text != "" && len([]rune(m.notes[id])) < 28 {
+			m.notes[id] += msg.Text
 		}
 	}
 	return m

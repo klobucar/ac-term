@@ -1,6 +1,10 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"image/color"
+
+	"charm.land/lipgloss/v2"
+)
 
 // Palette lifted from the web game's CSS custom properties — the four group
 // colors are the "oxide gold / pine LED / azure tape / chrome violet" tape-deck
@@ -21,9 +25,9 @@ var (
 )
 
 // themeColors indexes the four group colors by themeIdx.
-var themeColors = []lipgloss.Color{colGold, colGreen, colBlue, colViolet}
+var themeColors = []color.Color{colGold, colGreen, colBlue, colViolet}
 
-func themeColor(i int) lipgloss.Color {
+func themeColor(i int) color.Color {
 	if i < 0 || i >= len(themeColors) {
 		return colMuted
 	}

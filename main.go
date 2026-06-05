@@ -17,7 +17,7 @@ import (
 	"github.com/klobucar/ac-term/internal/save"
 	"github.com/klobucar/ac-term/internal/ui"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 // progSender adapts *tea.Program to ui.Sender. The program isn't constructed
@@ -103,7 +103,7 @@ func main() {
 
 	sender := &progSender{}
 	model := ui.New(puzzles, player, sender)
-	prog := tea.NewProgram(model, tea.WithAltScreen())
+	prog := tea.NewProgram(model) // alt-screen is set on the View in v2
 	sender.p = prog
 
 	go refresh(prog, now, cached, unlocked, withBacklog, player)

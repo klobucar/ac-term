@@ -3,7 +3,7 @@ package ui
 import (
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 )
 
@@ -68,8 +68,9 @@ func (m Model) noteCardWidth() int {
 // keeps a single uniform background (the terminal's) — only the border and the
 // gradient text carry color, so there's no mismatched band behind the lines.
 func (m Model) renderNoteCard() string {
-	w := m.noteCardWidth()
-	inner := w - 4 // Width(w) includes the 2+2 horizontal padding; border is extra
+	// inner is the content width; the box auto-sizes around it (no explicit
+	// Width, which in lipgloss v2 would include the border and wrap the lines).
+	inner := m.noteCardWidth() - 4
 
 	hue := float64(m.frame * 2) // slow spectral drift
 	a := hsl(hue, 0.85, 0.62)
@@ -86,7 +87,7 @@ func (m Model) renderNoteCard() string {
 	body := titleRow + "\n\n" + note + "\n\n" + wave + "\n" + hint
 
 	return lipgloss.NewStyle().
-		Width(w).Padding(1, 2).
+		Padding(1, 2).
 		Border(lipgloss.DoubleBorder()).
 		BorderForeground(a.color()).
 		Render(body)
@@ -95,8 +96,7 @@ func (m Model) renderNoteCard() string {
 // renderEraseCard is the "erase tape?" confirmation shown over the deck. Hot
 // (red) border, since it discards a saved result.
 func (m Model) renderEraseCard() string {
-	w := m.noteCardWidth()
-	inner := w - 4
+	inner := m.noteCardWidth() - 4
 	center := lipgloss.NewStyle().Width(inner).Align(lipgloss.Center)
 
 	title := center.Foreground(colHot).Bold(true).Render("🧲  ERASE TAPE")
@@ -106,7 +106,7 @@ func (m Model) renderEraseCard() string {
 			keyStyle.Render("n") + helpStyle.Render(" keep"))
 
 	return lipgloss.NewStyle().
-		Width(w).Padding(1, 2).
+		Padding(1, 2).
 		Border(lipgloss.DoubleBorder()).
 		BorderForeground(colHot).
 		Render(title + "\n\n" + body + "\n\n" + choice)

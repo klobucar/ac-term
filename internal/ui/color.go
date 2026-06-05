@@ -2,15 +2,16 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"math"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 )
 
 // rgb is a truecolor triple we can interpolate before handing to lipgloss.
 type rgb struct{ r, g, b float64 }
 
-func (c rgb) color() lipgloss.Color {
+func (c rgb) color() color.Color {
 	clamp := func(v float64) int {
 		if v < 0 {
 			v = 0

@@ -7,12 +7,20 @@ import (
 	"github.com/klobucar/ac-term/internal/data"
 	"github.com/klobucar/ac-term/internal/save"
 
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 const gridWidth = 4*(tileW+2) + 3 // four tiles (content+border) + inter-tile gaps
 
-func (m Model) View() string {
+// View renders the current screen into a full-screen (alt-screen) tea.View.
+func (m Model) View() tea.View {
+	v := tea.NewView(m.screenContent())
+	v.AltScreen = true
+	return v
+}
+
+func (m Model) screenContent() string {
 	if m.screen == screenPicker {
 		return m.viewPicker()
 	}
@@ -240,9 +248,12 @@ func (m Model) renderTile(idx int) string {
 
 	// Cue state reads from the thick blue border + ● marker; we deliberately
 	// avoid a fill color here — inner gradient/label text emits SGR resets that
-	// would leave a partial, patchy black background.
+	// would leave a partial, patchy black background. No explicit Width/Height:
+	// every content line is built to exactly tileInner wide, so the box
+	// auto-sizes identically across lipgloss versions (v2's Width includes the
+	// border, which would otherwise squeeze the content).
 	box := lipgloss.NewStyle().
-		Width(tileW).Height(3).Padding(0, 1).
+		Padding(0, 1).
 		Border(border).BorderForeground(borderCol).
 		MarginRight(1)
 
