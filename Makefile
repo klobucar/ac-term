@@ -1,7 +1,7 @@
 # ac-term — build + maintenance tasks.
 
-# The published puzzle feed (your fork's GitHub Pages). Override: make data FEED=...
-FEED  ?= https://klobucar.github.io/audio-connections/api/v0/puzzle.json
+# The published puzzle feed (the live site). Override: make data FEED=...
+FEED  ?= https://connections.audio/api/v0/puzzle.json
 EMBED := internal/data/feed/puzzle.json
 
 .PHONY: build run data vet tidy clean

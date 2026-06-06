@@ -1,7 +1,7 @@
 // Package remote keeps the puzzle catalogue fresh by fetching a published
-// puzzle.json from the audio-connections site (a fork's GitHub Pages by
-// default) and caching it on disk. The build resolves day numbers/dates, so the
-// TUI just consumes the array — no TypeScript or schedule logic lives here.
+// puzzle.json from the connections.audio site and caching it on disk. The build
+// resolves day numbers/dates, so the TUI just consumes the array — no
+// TypeScript or schedule logic lives here.
 //
 // Layering: the binary always ships an embedded snapshot (offline floor). On
 // launch it loads the disk cache instantly if present, then refreshes in the
@@ -43,8 +43,8 @@ func decode(raw []byte) (Catalogue, error) {
 	return Catalogue{Puzzles: puzzles, Backlog: backlog}, nil
 }
 
-// DefaultURL is the published catalogue on the klobucar fork's Pages site.
-const DefaultURL = "https://klobucar.github.io/audio-connections/api/v0/puzzle.json"
+// DefaultURL is the published catalogue served by the live site.
+const DefaultURL = "https://connections.audio/api/v0/puzzle.json"
 
 // URL is the catalogue source, overridable via AC_PUZZLES_URL.
 func URL() string {

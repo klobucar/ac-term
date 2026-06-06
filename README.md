@@ -69,7 +69,7 @@ loads instantly from a disk cache (or the embedded snapshot if there's no
 cache), then refreshes in the background from the published catalogue:
 
 ```
-https://klobucar.github.io/audio-connections/api/v0/puzzle.json
+https://connections.audio/api/v0/puzzle.json
 ```
 
 The fetch is a conditional GET (ETag), so an unchanged catalogue costs a single
